@@ -1,0 +1,28 @@
+# Java
+*.class
+*.jar
+*.war
+*.iml
+/out/
+target/
+
+# Python
+*.pyc
+__pycache__/
+.env
+venv/
+*.pyo
+
+# Node / Frontend
+node_modules/
+dist/
+build/
+
+# IDEs
+.idea/
+*.swp
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+*.log
