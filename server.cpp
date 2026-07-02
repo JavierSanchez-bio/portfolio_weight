@@ -1,32 +1,56 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include "IdealPortfolio.h"
+#include "ActualPortfolio.h"
 #include "httplib.h"
 
 int main() {
     httplib::Server svr;
-    IdealPortfolio mi_portfolio;
+    IdealPortfolio ideal_portfolio;
 
-    // 1. Definimos el "Endpoint" que escuchará al Frontend para cambiar activos
-    // Cuando desde el navegador o app pulses "changeAsset", llegará aquí
+    // Endpoint to update asset allocation
     svr.Post("/changeAsset", [&](const httplib::Request& req, httplib::Response& res) {
-        // Aquí recuperarás los datos enviados por el botón del Frontend
-        // Por ejemplo, asumiendo que llegan las variables "ticker" y "porcentaje"
-        std::string ticker = req.get_file_value("ticker").content;
-        double porcentaje = std::stod(req.get_file_value("percentage").content);
-
-        // Modificamos el portfolio en memoria de forma instantánea
-        mi_portfolio.add_or_modify(ticker, porcentaje);
-
-        std::cout << "Frontend ordenó modificar: " << ticker << " al " << porcentaje << "%\n";
         
-        // Respondemos al Frontend que todo ha ido bien
-        res.set_content("¡Activo actualizado!", "text/plain");
+        // Validate payload
+        if (req.has_param("ticker") && req.has_param("percentage")) {
+            
+            std::string ticker = req.get_param_value("ticker");
+            double percentage = std::stod(req.get_param_value("percentage"));
+
+            // Update in-memory portfolio
+            ideal_portfolio.ChangeAsset(ticker, percentage);
+
+            std::cout << "[INFO] Allocation updated: " << ticker << " set to " << percentage << "%.\n";
+            
+            // Success response
+            res.status = 200;
+            res.set_content("Asset successfully updated.", "text/plain");
+        } else {
+            // Handle missing parameters
+            std::cerr << "[ERROR] Invalid request: Missing ticker or percentage parameters.\n";
+            res.status = 400; 
+            res.set_content("Bad Request: Missing parameters.", "text/plain");
+        }
     });
 
-    // 2. Arrancamos el servidor en el puerto 8080 de tu Ubuntu
-    // Este método contiene el bucle infinito eficiente que se queda esperando peticiones
-    std::cout << "Servidor de Market Data escuchando en http://localhost:8080...\n";
+    // Health check endpoint
+    svr.Get("/", [](const httplib::Request& req, httplib::Response& res) {
+        std::string html = R"(
+            <html>
+                <head><title>Market Data Server</title></head>
+                <body style="font-family: Arial; text-align: center; margin-top: 50px;">
+                    <h2>Server Status: Online</h2>
+                    <p>System is operating normally.</p>
+                </body>
+            </html>
+        )";
+        res.set_content(html, "text/html");
+    });
+
+    // Start server loop
+    std::cout << "[INFO] Market Data Server initializing...\n";
+    std::cout << "[INFO] Listening on http://0.0.0.0:8080\n";
     svr.listen("0.0.0.0", 8080); 
 
     return 0;

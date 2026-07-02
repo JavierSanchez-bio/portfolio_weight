@@ -1,3 +1,6 @@
+#ifndef IDEALPORTFOLIO_H
+#define IDEALPORTFOLIO_H
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -17,3 +20,6 @@ public:
     }
     
 };
+
+
+#endif // IDEALPORTFOLIO_H

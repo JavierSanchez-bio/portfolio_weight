@@ -1,3 +1,6 @@
+#ifndef ACTUALPORTFOLIO_H
+#define ACTUALPORTFOLIO_H
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -17,3 +20,5 @@ public:
     }
     
 };
+
+#endif // ACTUALPORTFOLIO_H
