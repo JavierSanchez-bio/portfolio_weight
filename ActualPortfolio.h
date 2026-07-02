@@ -18,6 +18,11 @@ public:
     void ChangeAsset(const std::string& ticker, double money) {
         assets_[ticker] = money;
     }
+
+    // Add this inside the public: section of ActualPortfolio.h
+    const std::unordered_map<std::string, double>& GetAssets() const {
+        return assets_;
+    }
     
 };
 

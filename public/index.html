@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Portfolio Asset Allocation</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f5f7fa; color: #333; margin: 0; padding: 40px; display: flex; gap: 40px; justify-content: center; align-items: flex-start; }
+        .card { background: #ffffff; padding: 30px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); width: 320px; }
+        h2 { color: #1a2a3a; font-size: 20px; margin-top: 0; margin-bottom: 20px; border-bottom: 2px solid #e1e8ed; padding-bottom: 12px; }
+        label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #4a5568; text-transform: uppercase; }
+        input { width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #cbd5e0; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; background-color: #2b6cb0; color: #fff; padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #2c5282; }
+        #status-message { text-align: center; margin-top: 16px; font-size: 14px; height: 20px; }
+        
+        /* Table Styles */
+        .table-card { background: #ffffff; padding: 30px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); width: 400px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
+        th { background-color: #edf2f7; color: #4a5568; font-size: 13px; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>Update Allocation</h2>
+        <label for="ticker">Asset Ticker</label>
+        <input type="text" id="ticker" placeholder="e.g. SAN.MC" required>
+
+        <label for="percentage">Target Allocation (%)</label>
+        <input type="number" id="percentage" step="0.01" placeholder="e.g. 45.50" required>
+
+        <button onclick="commitAssetAllocation()">Update Asset</button>
+        <div id="status-message"></div>
+    </div>
+
+    <div class="table-card">
+        <h2>Current Ideal Portfolio Structure</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Ticker</th>
+                    <th>Target Percentage</th>
+                </tr>
+            </thead>
+            <tbody id="portfolio-table-body">
+                </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Run automatically when page finishes loading
+        window.onload = function() {
+            fetchPortfolio();
+        };
+
+        // Fetch data from C++ and populate the HTML table
+        function fetchPortfolio() {
+            fetch('/getPortfolio')
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById('portfolio-table-body');
+                    tableBody.innerHTML = ''; // Clear previous contents
+
+                    if (data.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="2" style="text-align:center; color:#a0aec0;">No assets configured.</td></tr>';
+                        return;
+                    }
+
+                    data.forEach(asset => {
+                        const row = `<tr>
+                            <strong><td>${asset.ticker}</td></strong>
+                            <td>${parseFloat(asset.percentage).toFixed(2)}%</td>
+                        </tr>`;
+                        tableBody.innerHTML += row;
+                    });
+                })
+                .catch(error => console.error('[CLIENT ERROR] Failed to fetch portfolio data:', error));
+        }
+
+        function commitAssetAllocation() {
+            const tickerInput = document.getElementById('ticker');
+            const percentageInput = document.getElementById('percentage');
+            const statusMessage = document.getElementById('status-message');
+
+            const ticker = tickerInput.value.trim().toUpperCase();
+            const percentage = percentageInput.value;
+
+            if (!ticker || !percentage) {
+                statusMessage.style.color = '#c53030';
+                statusMessage.innerText = 'Error: All fields are required.';
+                return;
+            }
+
+            fetch('/changeAsset', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ 'ticker': ticker, 'percentage': percentage })
+            })
+            .then(response => response.text())
+            .then(data => {
+                statusMessage.style.color = '#2f855a';
+                statusMessage.innerText = data;
+                
+                tickerInput.value = '';
+                percentageInput.value = '';
+                
+                fetchPortfolio(); // <-- RE-FETCH DATA IMMEDIATELY TO REFRESH THE VISUAL TABLE
+                setTimeout(() => statusMessage.innerText = '', 3000);
+            })
+            .catch(error => {
+                statusMessage.style.color = '#c53030';
+                statusMessage.innerText = 'Connection error.';
+            });
+        }
+    </script>
+</body>
+</html>

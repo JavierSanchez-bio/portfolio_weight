@@ -1,5 +1,4 @@
 #include <iostream>
-#include <map>
 #include <string>
 #include "IdealPortfolio.h"
 #include "ActualPortfolio.h"
@@ -34,19 +33,28 @@ int main() {
         }
     });
 
-    // Health check endpoint
-    svr.Get("/", [](const httplib::Request& req, httplib::Response& res) {
-        std::string html = R"(
-            <html>
-                <head><title>Market Data Server</title></head>
-                <body style="font-family: Arial; text-align: center; margin-top: 50px;">
-                    <h2>Server Status: Online</h2>
-                    <p>System is operating normally.</p>
-                </body>
-            </html>
-        )";
-        res.set_content(html, "text/html");
+    // Print ideal portfolio
+    svr.Get("/getPortfolio", [&](const httplib::Request& req, httplib::Response& res) {
+        std::string json = "[";
+        bool first = true;
+        
+        for (const auto& [ticker, percentage] : ideal_portfolio.GetTargets()) {
+            if (!first) json += ",";
+            json += "{\"ticker\":\"" + ticker + "\",\"percentage\":" + std::to_string(percentage) + "}";
+            first = false;
+        }
+        json += "]";
+
+        res.status = 200;
+        res.set_content(json, "application/json"); // Inform the browser it's receiving raw JSON data
     });
+
+    // Health check endpoint
+    bool mount_success = svr.set_mount_point("/", "./public");
+    if (!mount_success) {
+        std::cerr << "[ERROR] Could not find folder './public'. Make sure it exists.\n";
+        return 1; 
+    }
 
     // Start server loop
     std::cout << "[INFO] Market Data Server initializing...\n";
