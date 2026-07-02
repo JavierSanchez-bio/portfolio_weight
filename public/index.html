@@ -3,94 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Portfolio Asset Allocation</title>
+    <title>Portfolio Management Dashboard</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f5f7fa; color: #333; margin: 0; padding: 40px; display: flex; gap: 40px; justify-content: center; align-items: flex-start; }
-        .card { background: #ffffff; padding: 30px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); width: 320px; }
-        h2 { color: #1a2a3a; font-size: 20px; margin-top: 0; margin-bottom: 20px; border-bottom: 2px solid #e1e8ed; padding-bottom: 12px; }
-        label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #4a5568; text-transform: uppercase; }
-        input { width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #cbd5e0; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; background-color: #2b6cb0; color: #fff; padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f5f7fa; color: #333; margin: 0; padding: 40px; display: flex; flex-direction: column; align-items: center; }
+        h1 { color: #1a2a3a; margin-bottom: 30px; font-size: 24px; }
+        .dashboard { display: flex; gap: 40px; justify-content: center; align-items: flex-start; max-width: 1000px; width: 100%; }
+        .column { flex: 1; display: flex; flex-direction: column; gap: 24px; }
+        .card { background: #ffffff; padding: 24px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
+        h2 { color: #2b6cb0; font-size: 15px; margin-top: 0; margin-bottom: 16px; border-bottom: 2px solid #e1e8ed; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .actual-title { color: #dd6b20; border-bottom-color: #feebc8; }
+        label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 6px; color: #4a5568; text-transform: uppercase; }
+        input { width: 100%; padding: 10px; margin-bottom: 16px; border: 1px solid #cbd5e0; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; background-color: #2b6cb0; color: #fff; padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; }
         button:hover { background-color: #2c5282; }
-        #status-message { text-align: center; margin-top: 16px; font-size: 14px; height: 20px; }
+        .actual-btn { background-color: #dd6b20; }
+        .actual-btn:hover { background-color: #c05621; }
+        .status-msg { text-align: center; margin-top: 12px; font-size: 13px; height: 18px; font-weight: 500; }
         
-        /* Table Styles */
-        .table-card { background: #ffffff; padding: 30px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); width: 400px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
-        th { background-color: #edf2f7; color: #4a5568; font-size: 13px; text-transform: uppercase; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+        th { background-color: #edf2f7; color: #4a5568; font-size: 11px; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>Update Allocation</h2>
-        <label for="ticker">Asset Ticker</label>
-        <input type="text" id="ticker" placeholder="e.g. SAN.MC" required>
+    <h1>Portfolio Management Dashboard</h1>
 
-        <label for="percentage">Target Allocation (%)</label>
-        <input type="number" id="percentage" step="0.01" placeholder="e.g. 45.50" required>
+    <div class="dashboard">
+        
+        <div class="column">
+            <div class="card">
+                <h2>Configure Target Allocation</h2>
+                <label for="ideal-ticker">Asset Ticker</label>
+                <input type="text" id="ideal-ticker" placeholder="e.g. SAN.MC">
 
-        <button onclick="commitAssetAllocation()">Update Asset</button>
-        <div id="status-message"></div>
-    </div>
+                <label for="ideal-percentage">Target Allocation (%)</label>
+                <input type="number" id="ideal-percentage" step="0.01" placeholder="e.g. 45.50">
 
-    <div class="table-card">
-        <h2>Current Ideal Portfolio Structure</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Ticker</th>
-                    <th>Target Percentage</th>
-                </tr>
-            </thead>
-            <tbody id="portfolio-table-body">
-                </tbody>
-        </table>
+                <button onclick="commitIdealAsset()">Update Target</button>
+                <div id="ideal-status" class="status-msg"></div>
+            </div>
+
+            <div class="card">
+                <h2>Ideal Portfolio View</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ticker</th>
+                            <th>Target Allocation</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ideal-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="column">
+            <div class="card">
+                <h2 class="actual-title">Record Actual Balance</h2>
+                <label for="actual-ticker">Asset Ticker</label>
+                <input type="text" id="actual-ticker" placeholder="e.g. SAN.MC">
+
+                <label for="actual-money">Current Balance (Value)</label>
+                <input type="number" id="actual-money" step="0.01" placeholder="e.g. 1500.00">
+
+                <button class="actual-btn" onclick="commitActualAsset()">Update Balance</button>
+                <div id="actual-status" class="status-msg"></div>
+            </div>
+
+            <div class="card">
+                <h2 class="actual-title">Actual Portfolio View</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ticker</th>
+                            <th>Current Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody id="actual-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        // Run automatically when page finishes loading
         window.onload = function() {
-            fetchPortfolio();
+            fetchIdealPortfolio();
+            fetchActualPortfolio();
         };
 
-        // Fetch data from C++ and populate the HTML table
-        function fetchPortfolio() {
+        function fetchIdealPortfolio() {
             fetch('/getPortfolio')
-                .then(response => response.json())
+                .then(res => res.json())
                 .then(data => {
-                    const tableBody = document.getElementById('portfolio-table-body');
-                    tableBody.innerHTML = ''; // Clear previous contents
-
-                    if (data.length === 0) {
-                        tableBody.innerHTML = '<tr><td colspan="2" style="text-align:center; color:#a0aec0;">No assets configured.</td></tr>';
-                        return;
-                    }
-
+                    const tableBody = document.getElementById('ideal-table-body');
+                    tableBody.innerHTML = data.length === 0 ? '<tr><td colspan="2" style="text-align:center; color:#a0aec0;">No targets configured.</td></tr>' : '';
                     data.forEach(asset => {
-                        const row = `<tr>
-                            <strong><td>${asset.ticker}</td></strong>
-                            <td>${parseFloat(asset.percentage).toFixed(2)}%</td>
-                        </tr>`;
-                        tableBody.innerHTML += row;
+                        tableBody.innerHTML += `<tr><td><strong>${asset.ticker}</strong></td><td>${parseFloat(asset.percentage).toFixed(2)}%</td></tr>`;
                     });
-                })
-                .catch(error => console.error('[CLIENT ERROR] Failed to fetch portfolio data:', error));
+                });
         }
 
-        function commitAssetAllocation() {
-            const tickerInput = document.getElementById('ticker');
-            const percentageInput = document.getElementById('percentage');
-            const statusMessage = document.getElementById('status-message');
-
+        function commitIdealAsset() {
+            const tickerInput = document.getElementById('ideal-ticker');
+            const percentageInput = document.getElementById('ideal-percentage');
+            const statusMessage = document.getElementById('ideal-status');
             const ticker = tickerInput.value.trim().toUpperCase();
             const percentage = percentageInput.value;
 
-            if (!ticker || !percentage) {
-                statusMessage.style.color = '#c53030';
-                statusMessage.innerText = 'Error: All fields are required.';
-                return;
+            if (!ticker || !percentage) { 
+                statusMessage.style.color = '#c53030'; 
+                statusMessage.innerText = 'Fields cannot be empty.'; 
+                return; 
             }
 
             fetch('/changeAsset', {
@@ -98,22 +123,55 @@
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({ 'ticker': ticker, 'percentage': percentage })
             })
-            .then(response => response.text())
-            .then(data => {
-                statusMessage.style.color = '#2f855a';
-                statusMessage.innerText = data;
-                
-                tickerInput.value = '';
-                percentageInput.value = '';
-                
-                fetchPortfolio(); // <-- RE-FETCH DATA IMMEDIATELY TO REFRESH THE VISUAL TABLE
+            .then(res => res.text().then(text => ({ ok: res.ok, text: text })))
+            .then(result => {
+                statusMessage.style.color = result.ok ? '#2f855a' : '#c53030';
+                statusMessage.innerText = result.text;
+                if (result.ok) { tickerInput.value = ''; percentageInput.value = ''; }
+                fetchIdealPortfolio();
                 setTimeout(() => statusMessage.innerText = '', 3000);
-            })
-            .catch(error => {
-                statusMessage.style.color = '#c53030';
-                statusMessage.innerText = 'Connection error.';
             });
         }
+
+        function fetchActualPortfolio() {
+            fetch('/getActualPortfolio')
+                .then(res => res.json())
+                .then(data => {
+                    const tableBody = document.getElementById('actual-table-body');
+                    tableBody.innerHTML = data.length === 0 ? '<tr><td colspan="2" style="text-align:center; color:#a0aec0;">No balances recorded.</td></tr>' : '';
+                    data.forEach(asset => {
+                        tableBody.innerHTML += `<tr><td><strong>${asset.ticker}</strong></td><td>$${parseFloat(asset.money).toFixed(2)}</td></tr>`;
+                    });
+                });
+        }
+
+        function commitActualAsset() {
+                const tickerInput = document.getElementById('actual-ticker');
+                const moneyInput = document.getElementById('actual-money');
+                const statusMessage = document.getElementById('actual-status');
+                const ticker = tickerInput.value.trim().toUpperCase();
+                const money = moneyInput.value;
+
+                if (!ticker || !money) { 
+                    statusMessage.style.color = '#c53030'; 
+                    statusMessage.innerText = 'Fields cannot be empty.'; 
+                    return; 
+                }
+
+                fetch('/changeActualAsset', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ 'ticker': ticker, 'money': money })
+                })
+                .then(res => res.text().then(text => ({ ok: res.ok, text: text })))
+                .then(result => {
+                    statusMessage.style.color = result.ok ? '#2f855a' : '#c53030';
+                    statusMessage.innerText = result.text;
+                    if (result.ok) { tickerInput.value = ''; moneyInput.value = ''; }
+                    fetchActualPortfolio();
+                    setTimeout(() => statusMessage.innerText = '', 3000);
+                });
+            }
     </script>
 </body>
 </html>

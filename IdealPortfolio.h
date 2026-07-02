@@ -2,15 +2,13 @@
 #define IDEALPORTFOLIO_H
 
 #include <iostream>
-#include <vector>
 #include <string>
 #include <unordered_map>
 
 class IdealPortfolio {
 private:
-	std::unordered_map<std::string, double> targets_;
+    std::unordered_map<std::string, double> targets_;
 
-    // Ahora calcula la suma PROYECTADA sustituyendo el valor si el activo ya existe
     bool isValidPercentage(const std::string& ticker, double percentage) const {
         if (percentage < 0.0 || percentage > 100.0) return false;
         
@@ -25,13 +23,11 @@ private:
     }
 
 public:
-	IdealPortfolio(const std::unordered_map<std::string, double>& targets) : targets_(targets) {}
-	IdealPortfolio() = default;
-    
-    // Cambiamos a bool para comunicar el resultado al servidor
+    IdealPortfolio() = default;
+
     bool ChangeAsset(const std::string& ticker, double percentage) {
         if (!isValidPercentage(ticker, percentage)) {
-            std::cerr << "[ERROR] Invalid target allocation. Total portfolio cannot exceed 100%.\n";
+            std::cerr << "[ERROR] Allocation limit exceeded. Total portfolio cannot exceed 100%.\n";
             return false;
         }
         targets_[ticker] = percentage;
