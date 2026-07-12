@@ -140,7 +140,7 @@
                     const tableBody = document.getElementById('actual-table-body');
                     tableBody.innerHTML = data.length === 0 ? '<tr><td colspan="2" style="text-align:center; color:#a0aec0;">No balances recorded.</td></tr>' : '';
                     data.forEach(asset => {
-                        tableBody.innerHTML += `<tr><td><strong>${asset.ticker}</strong></td><td>$${parseFloat(asset.money).toFixed(2)}</td></tr>`;
+                        tableBody.innerHTML += `<tr><td><strong>${asset.ticker}</strong></td><td>€${parseFloat(asset.money).toFixed(2)}</td></tr>`;
                     });
                 });
         }

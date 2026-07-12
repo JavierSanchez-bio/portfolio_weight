@@ -2,12 +2,19 @@
 #include <string>
 #include "IdealPortfolio.h"
 #include "ActualPortfolio.h"
+#include "PortfolioStorage.h"
 #include "httplib.h"
 
 int main() {
     httplib::Server svr;
     IdealPortfolio ideal_portfolio;
     ActualPortfolio actual_portfolio;
+    PortfolioStorage storage("portfolio_db.json");
+
+
+    if (!storage.Load(ideal_portfolio, actual_portfolio)) {
+        std::cerr << "[WARN] Failed to load persistent data. Starting fresh.\n";
+    }
 
     // Ideal Portfolio Endpoints
     svr.Post("/changeAsset", [&](const httplib::Request& req, httplib::Response& res) {
@@ -17,6 +24,7 @@ int main() {
 
             if (ideal_portfolio.ChangeAsset(ticker, percentage)) {
                 std::cout << "[INFO] Target updated: " << ticker << " -> " << percentage << "%\n";
+                storage.Save(ideal_portfolio, actual_portfolio);
                 res.status = 200;
                 res.set_content("Target allocation updated successfully.", "text/plain");
             } else {
@@ -49,7 +57,8 @@ int main() {
             double money = std::stod(req.get_param_value("money"));
 
             if (actual_portfolio.ChangeAsset(ticker, money)) {
-                std::cout << "[INFO] Balance updated: " << ticker << " -> $" << money << "\n";
+                std::cout << "[INFO] Balance updated: " << ticker << " -> €" << money << "\n";
+                storage.Save(ideal_portfolio, actual_portfolio);
                 res.status = 200;
                 res.set_content("Asset balance updated successfully.", "text/plain");
             } else {
