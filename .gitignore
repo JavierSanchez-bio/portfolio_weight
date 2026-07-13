@@ -1,32 +1,20 @@
-# Java
-*.class
-*.jar
-*.war
-*.iml
-/out/
-target/
+# Compilation
+server
+*.o
+*.out
 
-# Python
-*.pyc
-__pycache__/
-.env
-venv/
-*.pyo
+# Data
+*.dat
+*.csv
+# data/   # Si decides meter los guardados en una carpeta
 
-# Node / Frontend
-node_modules/
-dist/
-build/
-
-# IDEs
+# IDE's
+.vscode/
 .idea/
-*.swp
 *.sublime-project
 *.sublime-workspace
 
-# Logs
-*.log
-
-
-# Others
-*.odt
+# Temporal files
+*~
+*.swp
+.DS_Store

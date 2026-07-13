@@ -6,85 +6,129 @@
     <title>Portfolio Management Dashboard</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f5f7fa; color: #333; margin: 0; padding: 40px; display: flex; flex-direction: column; align-items: center; }
-        h1 { color: #1a2a3a; margin-bottom: 30px; font-size: 24px; }
-        .dashboard { display: flex; gap: 40px; justify-content: center; align-items: flex-start; max-width: 1000px; width: 100%; }
+        h1 { color: #1a2a3a; margin-bottom: 20px; font-size: 24px; }
+        
+        /* Navbar / Tabs */
+        .navbar { display: flex; background: #2c3e50; padding: 10px; border-radius: 6px; margin-bottom: 20px; width: 100%; max-width: 1000px; box-sizing: border-box; }
+        .navbar button { background: none; border: none; color: white; padding: 12px 24px; cursor: pointer; font-size: 15px; font-weight: bold; transition: background 0.2s; width: auto; }
+        .navbar button:hover, .navbar button.active { background: #34495e; border-radius: 4px; }
+        
+        /* Containers */
+        .tab-content { display: none; width: 100%; max-width: 1000px; }
+        .tab-content.active { display: block; }
+        .dashboard { display: flex; gap: 40px; justify-content: center; align-items: flex-start; width: 100%; }
         .column { flex: 1; display: flex; flex-direction: column; gap: 24px; }
+        
+        /* Cards & Forms */
         .card { background: #ffffff; padding: 24px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
         h2 { color: #2b6cb0; font-size: 15px; margin-top: 0; margin-bottom: 16px; border-bottom: 2px solid #e1e8ed; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
         .actual-title { color: #dd6b20; border-bottom-color: #feebc8; }
         label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 6px; color: #4a5568; text-transform: uppercase; }
         input { width: 100%; padding: 10px; margin-bottom: 16px; border: 1px solid #cbd5e0; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; background-color: #2b6cb0; color: #fff; padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; }
-        button:hover { background-color: #2c5282; }
+        
+        /* Buttons */
+        .action-btn { width: 100%; background-color: #2b6cb0; color: #fff; padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .action-btn:hover { background-color: #2c5282; }
         .actual-btn { background-color: #dd6b20; }
         .actual-btn:hover { background-color: #c05621; }
         .status-msg { text-align: center; margin-top: 12px; font-size: 13px; height: 18px; font-weight: 500; }
         
+        /* Tables */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
         th { background-color: #edf2f7; color: #4a5568; font-size: 11px; text-transform: uppercase; }
+        .badge { background: #edf2f7; padding: 4px 8px; border-radius: 12px; font-size: 12px; color: #2d3748; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <h1>Portfolio Management Dashboard</h1>
 
-    <div class="dashboard">
-        
-        <div class="column">
-            <div class="card">
-                <h2>Configure Target Allocation</h2>
-                <label for="ideal-ticker">Asset Ticker</label>
-                <input type="text" id="ideal-ticker" placeholder="e.g. SAN.MC">
+    <div class="navbar">
+        <button onclick="switchTab('cartera')" id="btn-cartera" class="active">Mi Cartera (Actual)</button>
+        <button onclick="switchTab('ideal')" id="btn-ideal">Cartera Ideal (Targets)</button>
+        <button onclick="switchTab('catalogo')" id="btn-catalogo">Catálogo de Activos</button>
+    </div>
 
-                <label for="ideal-percentage">Target Allocation (%)</label>
-                <input type="number" id="ideal-percentage" step="0.01" placeholder="e.g. 45.50">
+    <div id="cartera" class="tab-content active">
+        <div class="dashboard">
+            <div class="column">
+                <div class="card">
+                    <h2 class="actual-title">Record Actual Balance</h2>
+                    <label for="actual-ticker">Asset Ticker</label>
+                    <input type="text" id="actual-ticker" placeholder="e.g. SAN.MC">
 
-                <button onclick="commitIdealAsset()">Update Target</button>
-                <div id="ideal-status" class="status-msg"></div>
+                    <label for="actual-money">Current Balance (Value)</label>
+                    <input type="number" id="actual-money" step="0.01" placeholder="e.g. 1500.00">
+
+                    <button class="action-btn actual-btn" onclick="commitActualAsset()">Update Balance</button>
+                    <div id="actual-status" class="status-msg"></div>
+                </div>
             </div>
-
-            <div class="card">
-                <h2>Ideal Portfolio View</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Ticker</th>
-                            <th>Target Allocation</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ideal-table-body"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="column">
-            <div class="card">
-                <h2 class="actual-title">Record Actual Balance</h2>
-                <label for="actual-ticker">Asset Ticker</label>
-                <input type="text" id="actual-ticker" placeholder="e.g. SAN.MC">
-
-                <label for="actual-money">Current Balance (Value)</label>
-                <input type="number" id="actual-money" step="0.01" placeholder="e.g. 1500.00">
-
-                <button class="actual-btn" onclick="commitActualAsset()">Update Balance</button>
-                <div id="actual-status" class="status-msg"></div>
-            </div>
-
-            <div class="card">
-                <h2 class="actual-title">Actual Portfolio View</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Ticker</th>
-                            <th>Current Balance</th>
-                        </tr>
-                    </thead>
-                    <tbody id="actual-table-body"></tbody>
-                </table>
+            <div class="column">
+                <div class="card">
+                    <h2 class="actual-title">Actual Portfolio View</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ticker</th>
+                                <th>Current Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="actual-table-body"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
+    </div>
 
+    <div id="ideal" class="tab-content">
+        <div class="dashboard">
+            <div class="column">
+                <div class="card">
+                    <h2>Configure Target Allocation</h2>
+                    <label for="ideal-ticker">Asset Ticker</label>
+                    <input type="text" id="ideal-ticker" placeholder="e.g. SP500">
+
+                    <label for="ideal-percentage">Target Allocation (%)</label>
+                    <input type="number" id="ideal-percentage" step="0.01" placeholder="e.g. 45.50">
+
+                    <button class="action-btn" onclick="commitIdealAsset()">Update Target</button>
+                    <div id="ideal-status" class="status-msg"></div>
+                </div>
+            </div>
+            <div class="column">
+                <div class="card">
+                    <h2>Ideal Portfolio View</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ticker</th>
+                                <th>Target Allocation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ideal-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="catalogo" class="tab-content">
+        <div class="card" style="width: 100%; box-sizing: border-box;">
+            <h2>Catálogo ISIN.json</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ticker Personalizado</th>
+                        <th>ISIN</th>
+                        <th>Categoría</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-catalogo">
+                    </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
@@ -93,6 +137,46 @@
             fetchActualPortfolio();
         };
 
+        // --- Lógica de Pestañas ---
+        function switchTab(tabId) {
+            // Ocultar todas las pestañas y desactivar botones
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.navbar button').forEach(btn => btn.classList.remove('active'));
+            
+            // Activar la seleccionada
+            document.getElementById(tabId).classList.add('active');
+            document.getElementById('btn-' + tabId).classList.add('active');
+            
+            // Si es catálogo, pedimos los datos al servidor
+            if (tabId === 'catalogo') {
+                loadCatalogo();
+            }
+        }
+
+        // --- Lógica del Catálogo (Nueva) ---
+        function loadCatalogo() {
+            fetch('/api/mappings')
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById('tabla-catalogo');
+                    tbody.innerHTML = '';
+                    
+                    for (const [ticker, info] of Object.entries(data)) {
+                        tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${ticker}</strong></td>
+                            <td><code>${info.isin || 'N/A'}</code></td>
+                            <td><span class="badge">${info.category || 'N/A'}</span></td>
+                        </tr>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching mappings:', error);
+                    document.getElementById('tabla-catalogo').innerHTML = '<tr><td colspan="3" style="color:red; text-align:center;">Error loading catalog</td></tr>';
+                });
+        }
+
+        // --- Lógica Original de Ideal Portfolio ---
         function fetchIdealPortfolio() {
             fetch('/getPortfolio')
                 .then(res => res.json())
@@ -133,6 +217,7 @@
             });
         }
 
+        // --- Lógica Original de Actual Portfolio ---
         function fetchActualPortfolio() {
             fetch('/getActualPortfolio')
                 .then(res => res.json())
@@ -146,32 +231,32 @@
         }
 
         function commitActualAsset() {
-                const tickerInput = document.getElementById('actual-ticker');
-                const moneyInput = document.getElementById('actual-money');
-                const statusMessage = document.getElementById('actual-status');
-                const ticker = tickerInput.value.trim().toUpperCase();
-                const money = moneyInput.value;
+            const tickerInput = document.getElementById('actual-ticker');
+            const moneyInput = document.getElementById('actual-money');
+            const statusMessage = document.getElementById('actual-status');
+            const ticker = tickerInput.value.trim().toUpperCase();
+            const money = moneyInput.value;
 
-                if (!ticker || !money) { 
-                    statusMessage.style.color = '#c53030'; 
-                    statusMessage.innerText = 'Fields cannot be empty.'; 
-                    return; 
-                }
-
-                fetch('/changeActualAsset', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ 'ticker': ticker, 'money': money })
-                })
-                .then(res => res.text().then(text => ({ ok: res.ok, text: text })))
-                .then(result => {
-                    statusMessage.style.color = result.ok ? '#2f855a' : '#c53030';
-                    statusMessage.innerText = result.text;
-                    if (result.ok) { tickerInput.value = ''; moneyInput.value = ''; }
-                    fetchActualPortfolio();
-                    setTimeout(() => statusMessage.innerText = '', 3000);
-                });
+            if (!ticker || !money) { 
+                statusMessage.style.color = '#c53030'; 
+                statusMessage.innerText = 'Fields cannot be empty.'; 
+                return; 
             }
+
+            fetch('/changeActualAsset', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ 'ticker': ticker, 'money': money })
+            })
+            .then(res => res.text().then(text => ({ ok: res.ok, text: text })))
+            .then(result => {
+                statusMessage.style.color = result.ok ? '#2f855a' : '#c53030';
+                statusMessage.innerText = result.text;
+                if (result.ok) { tickerInput.value = ''; moneyInput.value = ''; }
+                fetchActualPortfolio();
+                setTimeout(() => statusMessage.innerText = '', 3000);
+            });
+        }
     </script>
 </body>
 </html>

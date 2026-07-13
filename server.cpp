@@ -4,6 +4,7 @@
 #include "ActualPortfolio.h"
 #include "PortfolioStorage.h"
 #include "httplib.h"
+#include "MarketData.h"
 
 int main() {
     httplib::Server svr;
@@ -15,6 +16,22 @@ int main() {
     if (!storage.Load(ideal_portfolio, actual_portfolio)) {
         std::cerr << "[WARN] Failed to load persistent data. Starting fresh.\n";
     }
+
+    MarketData market;
+    if (!market.LoadMappings("ISIN.json")) {
+        std::cerr << "Warning: Starting without predefined ticker mappings.\n";
+    }
+
+    svr.Get("/api/mappings", [](const httplib::Request& req, httplib::Response& res) {
+        std::ifstream file("ISIN.json");
+        if (!file.is_open()) {
+            res.status = 404;
+            res.set_content("{\"error\": \"Mappings file not found\"}", "application/json");
+            return;
+        }
+        std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        res.set_content(content, "application/json");
+    });
 
     // Ideal Portfolio Endpoints
     svr.Post("/changeAsset", [&](const httplib::Request& req, httplib::Response& res) {

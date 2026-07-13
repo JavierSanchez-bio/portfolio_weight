@@ -30,7 +30,13 @@ public:
             std::cerr << "[ERROR] Allocation limit exceeded. Total portfolio cannot exceed 100%.\n";
             return false;
         }
-        targets_[ticker] = percentage;
+
+        if (percentage == 0.0) {
+            targets_.erase(ticker);
+        } else {
+            targets_[ticker] = percentage;
+        }
+        
         return true;
     }
 

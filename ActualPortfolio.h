@@ -13,11 +13,12 @@ public:
     ActualPortfolio() = default;
 
     bool ChangeAsset(const std::string& ticker, double money) {
-        if (money < 0.0) {
-            std::cerr << "[ERROR] Invalid amount. Asset balance cannot be negative.\n";
-            return false;
+        if (money <= 0.0) {
+        assets_.erase(ticker);
+        return false;
+        } else {
+            assets_[ticker] = money;
         }
-        assets_[ticker] = money;
         return true;
     }
 

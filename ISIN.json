@@ -1,0 +1,21 @@
+{
+    "Take-Two": { "isin": "US8740541094", "category": "Acciones" },
+    "Sony": { "isin": "US8356993076", "category": "Acciones" },
+    "Bitcoin": { "isin": "BTC", "category": "Cripto" },
+    "SP500": { "isin": "IE00B5BMR087", "category": "USA" },
+    "Emerging Markets TR": { "isin": "LU1681045370", "category": "Emergentes" },
+    "Oro": { "isin": "IE00B4ND3602", "category": "Oro" },
+    "Europa TR": { "isin": "LU0908500753", "category": "Europa" },
+    "SAN": { "isin": "ES0113900J37", "category": "Acciones" },
+    "Asia TR": { "isin": "IE00B5L8K969", "category": "Asia" },
+    "Ibex": { "FR0010655746": "Europa" },
+    "All World": { "isin": "IE00BK5BQT80", "category": "Global" },
+    "MSCI World": { "isin": "IE00B4L5Y983", "category": "Global" },
+    "USA": { "isin": "IE000N4ZYX28", "category": "USA" },
+    "Developed World": { "isin": "IE000N51F726", "category": "Global" },
+    "Emerging Markets MI": { "isin": "IE000QAZP7L2", "category": "Emergentes" },
+    "Japan": { "isin": "IE00BYX5N771", "category": "Asia" },
+    "Europa MI": { "isin": "IE00BYX5MD61", "category": "Europa" },
+    "USA Hedged": { "isin": "IE00B1G3DH73", "category": "USA" },
+    "Asia MI": { "isin": "IE00BDZVHT63", "category": "Asia" }
+}
