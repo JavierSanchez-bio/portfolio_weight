@@ -106,17 +106,44 @@ int main() {
 
     svr.Get("/getActualPortfolio", [&](const httplib::Request& req, httplib::Response& res) {
         nlohmann::json j_arr = nlohmann::json::array();
+        
+        double total_portfolio_value = 0.0;
+        
+        struct AssetInfo {
+            std::string ticker;
+            std::string category;
+            double units;
+            double price;
+            double value;
+        };
+        std::vector<AssetInfo> temp_assets;
+
         for (const auto& [ticker, units] : actual_portfolio.GetAssets()) {
             double price = market.GetPrice(ticker);
-            double total_value = units * price; 
+            std::string category = market.GetCategory(ticker); // Obtenemos la categoría
+            double value = units * price;
+            
+            total_portfolio_value += value;
+            temp_assets.push_back({ticker, category, units, price, value});
+        }
+
+        for (const auto& asset : temp_assets) {
+            double percentage = 0.0;
+            if (total_portfolio_value > 0.0) {
+                percentage = (asset.value / total_portfolio_value) * 100.0;
+            }
 
             nlohmann::json j_asset;
-            j_asset["ticker"] = ticker;
-            j_asset["units"] = units;
-            j_asset["price"] = price;
-            j_asset["value"] = total_value;
+            j_asset["ticker"] = asset.ticker;
+            j_asset["category"] = asset.category;
+            j_asset["units"] = asset.units;
+            j_asset["price"] = asset.price;
+            j_asset["value"] = asset.value;
+            j_asset["percentage"] = percentage;
+            
             j_arr.push_back(j_asset);
         }
+
         res.status = 200;
         res.set_content(j_arr.dump(), "application/json");
     });

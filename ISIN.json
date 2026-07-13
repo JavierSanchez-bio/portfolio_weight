@@ -1,5 +1,6 @@
 {
-    "Bitcoin": { "isin": "BTC-EUR", "category": "Cripto" },
+    "BITCOIN": { "isin": "BTC-EUR", "category": "Cripto" },
+    "SONY": { "isin": "SON1.HA", "category": "Acciones" },
     "SP500": { "isin": "IE00B5BMR087", "category": "USA" },
     "EMERGING MARKETS TR": { "isin": "LU1681045370", "category": "Emergentes" },
     "ORO": { "isin": "IE00B4ND3602", "category": "Oro" },
@@ -14,6 +15,6 @@
     "EMERGING MARKETS MI": { "isin": "IE000QAZP7L2", "category": "Emergentes" },
     "JAPAN": { "isin": "IE00BYX5N771", "category": "Asia" },
     "EUROPA MI": { "isin": "IE00BYX5MD61", "category": "Europa" },
-    "USA Hedged": { "isin": "IE00B1G3DH73", "category": "USA" },
+    "USA HEDGED": { "isin": "IE00B1G3DH73", "category": "USA" },
     "ASIA MI": { "isin": "IE00BDZVHT63", "category": "Asia" }
 }

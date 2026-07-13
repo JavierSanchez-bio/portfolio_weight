@@ -68,13 +68,13 @@
             </div>
             <div class="column" style="flex: 2;">
                 <div class="card">
-                    <h2 class="actual-title">Actual Portfolio View (Live Prices)</h2>
+                    <h2 class="actual-title">Actual Portfolio View (Resumen)</h2>
                     <table>
                         <thead>
                             <tr>
                                 <th>Ticker</th>
                                 <th>Unidades</th>
-                                <th>Precio Mercado</th>
+                                <th>Precio (€)</th>
                                 <th>Valor Total</th>
                             </tr>
                         </thead>
@@ -119,18 +119,20 @@
 
     <div id="catalogo" class="tab-content">
         <div class="card" style="width: 100%; box-sizing: border-box;">
-            <h2>Catálogo ISIN.json</h2>
+            <h2>Catálogo General y Desglose de Portfolio</h2>
             <table>
                 <thead>
                     <tr>
-                        <th>Ticker Personalizado</th>
-                        <th>ISIN</th>
+                        <th>Ticker</th>
                         <th>Categoría</th>
-                        <th>Precio Actual</th>
+                        <th>Unidades</th>
+                        <th>Precio (€)</th>
+                        <th>Valor Total</th>
+                        <th>% Portfolio</th>
                     </tr>
                 </thead>
                 <tbody id="tabla-catalogo">
-                    </tbody>
+                </tbody>
             </table>
         </div>
     </div>
@@ -151,66 +153,81 @@
             if (tabId === 'catalogo') {
                 loadCatalogo();
             } else if (tabId === 'cartera') {
-                fetchActualPortfolio(); // Refrescar precios al entrar a la pestaña
+                fetchActualPortfolio(); 
             }
         }
 
-        // --- Catálogo y Precios Asíncronos ---
+        // --- Catálogo Maestra (Cruza JSON de activos con unidades del usuario) ---
         function loadCatalogo() {
-            fetch('/api/mappings')
-                .then(res => res.json())
-                .then(data => {
-                    const tbody = document.getElementById('tabla-catalogo');
-                    tbody.innerHTML = '';
+            const tbody = document.getElementById('tabla-catalogo');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><span class="loading" style="color:#a0aec0; font-style:italic;">Cargando catálogo maestro...</span></td></tr>';
+            
+            // Pedimos simultáneamente los mappings (catálogo base) y el portfolio del usuario
+            Promise.all([
+                fetch('/api/mappings').then(res => res.json()),
+                fetch('/getActualPortfolio').then(res => res.json())
+            ])
+            .then(([mappings, portfolio]) => {
+                tbody.innerHTML = '';
+                
+                // Convertimos el array de la cartera en un diccionario para poder emparejarlo con el catálogo rápido
+                const portMap = {};
+                portfolio.forEach(p => portMap[p.ticker] = p);
+
+                for (const [ticker, info] of Object.entries(mappings)) {
+                    // Si el usuario tiene este activo, cogemos sus datos. Si no, mostramos todo a 0.
+                    const pData = portMap[ticker] || { units: 0, value: 0, percentage: 0 };
+                    const rowId = `price-${ticker}`;
                     
-                    for (const [ticker, info] of Object.entries(data)) {
-                        // Construimos la fila con un ID específico para el precio
-                        const rowId = `price-${ticker}`;
-                        tbody.innerHTML += `
-                        <tr>
-                            <td><strong>${ticker}</strong></td>
-                            <td><code>${info.isin || 'N/A'}</code></td>
-                            <td><span class="badge">${info.category || 'N/A'}</span></td>
-                            <td id="${rowId}"><span class="loading">Buscando...</span></td>
-                        </tr>`;
-                        
-                        // Hacemos una petición asíncrona para obtener el precio sin bloquear la pantalla
-                        fetch(`/api/price?ticker=${ticker}`)
-                            .then(resPrice => resPrice.json())
-                            .then(dataPrice => {
-                                document.getElementById(rowId).innerHTML = `<strong>€${dataPrice.price.toFixed(2)}</strong>`;
-                            })
-                            .catch(() => {
-                                document.getElementById(rowId).innerHTML = `<span style="color:red">Error</span>`;
-                            });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching mappings:', error);
-                });
+                    tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${ticker}</strong></td>
+                        <td><span class="badge">${info.category || 'N/A'}</span></td>
+                        <td>${parseFloat(pData.units).toFixed(2)}</td>
+                        <td id="${rowId}"><span class="loading">Buscando...</span></td>
+                        <td><strong>€${parseFloat(pData.value).toFixed(2)}</strong></td>
+                        <td style="color:#2b6cb0;"><strong>${parseFloat(pData.percentage).toFixed(2)}%</strong></td>
+                    </tr>`;
+                    
+                    // Disparamos la búsqueda de precio en vivo de Yahoo
+                    fetch(`/api/price?ticker=${ticker}`)
+                        .then(resPrice => resPrice.json())
+                        .then(dataPrice => {
+                            document.getElementById(rowId).innerHTML = `<strong>€${dataPrice.price.toFixed(2)}</strong>`;
+                        })
+                        .catch(() => {
+                            document.getElementById(rowId).innerHTML = `<span style="color:red">Error</span>`;
+                        });
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching mappings:', error);
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">Error cargando el catálogo.</td></tr>';
+            });
         }
 
+        // --- Mi Cartera (Vista Simplificada de 4 columnas) ---
         function fetchActualPortfolio() {
             const tableBody = document.getElementById('actual-table-body');
-            tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;"><span class="loading">Cargando precios de mercado...</span></td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;"><span class="loading" style="color:#a0aec0; font-style:italic;">Cargando precios en vivo...</span></td></tr>';
             
             fetch('/getActualPortfolio')
                 .then(res => res.json())
                 .then(data => {
                     tableBody.innerHTML = data.length === 0 ? '<tr><td colspan="4" style="text-align:center; color:#a0aec0;">No balances recorded.</td></tr>' : '';
+                    
                     data.forEach(asset => {
-                        // Añadidas las columnas de precio y valor total
                         tableBody.innerHTML += `<tr>
                             <td><strong>${asset.ticker}</strong></td>
-                            <td>${parseFloat(asset.units).toFixed(2)} uds</td>
+                            <td>${parseFloat(asset.units).toFixed(2)}</td>
                             <td>€${parseFloat(asset.price).toFixed(2)}</td>
-                            <td style="color:#2b6cb0;"><strong>€${parseFloat(asset.value).toFixed(2)}</strong></td>
+                            <td><strong>€${parseFloat(asset.value).toFixed(2)}</strong></td>
                         </tr>`;
                     });
                 });
         }
 
-        // --- Lógica de Modificación Intacta ---
+        // --- Funciones de Guardado (Intactas) ---
         function fetchIdealPortfolio() {
             fetch('/getPortfolio')
                 .then(res => res.json())
