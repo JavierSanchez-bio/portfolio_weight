@@ -18,3 +18,4 @@ server
 *~
 *.swp
 .DS_Store
+old/

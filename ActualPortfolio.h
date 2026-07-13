@@ -12,12 +12,12 @@ private:
 public:
     ActualPortfolio() = default;
 
-    bool ChangeAsset(const std::string& ticker, double money) {
-        if (money <= 0.0) {
+    bool ChangeAsset(const std::string& ticker, double units) {
+        if (units <= 0.0) {
         assets_.erase(ticker);
         return false;
         } else {
-            assets_[ticker] = money;
+            assets_[ticker] = units;
         }
         return true;
     }

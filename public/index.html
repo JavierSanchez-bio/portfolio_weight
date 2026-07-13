@@ -38,6 +38,7 @@
         th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
         th { background-color: #edf2f7; color: #4a5568; font-size: 11px; text-transform: uppercase; }
         .badge { background: #edf2f7; padding: 4px 8px; border-radius: 12px; font-size: 12px; color: #2d3748; font-weight: bold; }
+        .loading { color: #a0aec0; font-style: italic; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -56,23 +57,25 @@
                 <div class="card">
                     <h2 class="actual-title">Record Actual Balance</h2>
                     <label for="actual-ticker">Asset Ticker</label>
-                    <input type="text" id="actual-ticker" placeholder="e.g. SAN.MC">
+                    <input type="text" id="actual-ticker" placeholder="e.g. SP500">
 
-                    <label for="actual-money">Current Balance (Value)</label>
-                    <input type="number" id="actual-money" step="0.01" placeholder="e.g. 1500.00">
+                    <label for="actual-units">Current Units (Acciones/Participaciones)</label>
+                    <input type="number" id="actual-units" step="0.01" placeholder="e.g. 15.5">
 
-                    <button class="action-btn actual-btn" onclick="commitActualAsset()">Update Balance</button>
+                    <button class="action-btn actual-btn" onclick="commitActualAsset()">Update Units</button>
                     <div id="actual-status" class="status-msg"></div>
                 </div>
             </div>
-            <div class="column">
+            <div class="column" style="flex: 2;">
                 <div class="card">
-                    <h2 class="actual-title">Actual Portfolio View</h2>
+                    <h2 class="actual-title">Actual Portfolio View (Live Prices)</h2>
                     <table>
                         <thead>
                             <tr>
                                 <th>Ticker</th>
-                                <th>Current Balance</th>
+                                <th>Unidades</th>
+                                <th>Precio Mercado</th>
+                                <th>Valor Total</th>
                             </tr>
                         </thead>
                         <tbody id="actual-table-body"></tbody>
@@ -123,6 +126,7 @@
                         <th>Ticker Personalizado</th>
                         <th>ISIN</th>
                         <th>Categoría</th>
+                        <th>Precio Actual</th>
                     </tr>
                 </thead>
                 <tbody id="tabla-catalogo">
@@ -137,23 +141,21 @@
             fetchActualPortfolio();
         };
 
-        // --- Lógica de Pestañas ---
         function switchTab(tabId) {
-            // Ocultar todas las pestañas y desactivar botones
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.navbar button').forEach(btn => btn.classList.remove('active'));
             
-            // Activar la seleccionada
             document.getElementById(tabId).classList.add('active');
             document.getElementById('btn-' + tabId).classList.add('active');
             
-            // Si es catálogo, pedimos los datos al servidor
             if (tabId === 'catalogo') {
                 loadCatalogo();
+            } else if (tabId === 'cartera') {
+                fetchActualPortfolio(); // Refrescar precios al entrar a la pestaña
             }
         }
 
-        // --- Lógica del Catálogo (Nueva) ---
+        // --- Catálogo y Precios Asíncronos ---
         function loadCatalogo() {
             fetch('/api/mappings')
                 .then(res => res.json())
@@ -162,21 +164,53 @@
                     tbody.innerHTML = '';
                     
                     for (const [ticker, info] of Object.entries(data)) {
+                        // Construimos la fila con un ID específico para el precio
+                        const rowId = `price-${ticker}`;
                         tbody.innerHTML += `
                         <tr>
                             <td><strong>${ticker}</strong></td>
                             <td><code>${info.isin || 'N/A'}</code></td>
                             <td><span class="badge">${info.category || 'N/A'}</span></td>
+                            <td id="${rowId}"><span class="loading">Buscando...</span></td>
                         </tr>`;
+                        
+                        // Hacemos una petición asíncrona para obtener el precio sin bloquear la pantalla
+                        fetch(`/api/price?ticker=${ticker}`)
+                            .then(resPrice => resPrice.json())
+                            .then(dataPrice => {
+                                document.getElementById(rowId).innerHTML = `<strong>€${dataPrice.price.toFixed(2)}</strong>`;
+                            })
+                            .catch(() => {
+                                document.getElementById(rowId).innerHTML = `<span style="color:red">Error</span>`;
+                            });
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching mappings:', error);
-                    document.getElementById('tabla-catalogo').innerHTML = '<tr><td colspan="3" style="color:red; text-align:center;">Error loading catalog</td></tr>';
                 });
         }
 
-        // --- Lógica Original de Ideal Portfolio ---
+        function fetchActualPortfolio() {
+            const tableBody = document.getElementById('actual-table-body');
+            tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;"><span class="loading">Cargando precios de mercado...</span></td></tr>';
+            
+            fetch('/getActualPortfolio')
+                .then(res => res.json())
+                .then(data => {
+                    tableBody.innerHTML = data.length === 0 ? '<tr><td colspan="4" style="text-align:center; color:#a0aec0;">No balances recorded.</td></tr>' : '';
+                    data.forEach(asset => {
+                        // Añadidas las columnas de precio y valor total
+                        tableBody.innerHTML += `<tr>
+                            <td><strong>${asset.ticker}</strong></td>
+                            <td>${parseFloat(asset.units).toFixed(2)} uds</td>
+                            <td>€${parseFloat(asset.price).toFixed(2)}</td>
+                            <td style="color:#2b6cb0;"><strong>€${parseFloat(asset.value).toFixed(2)}</strong></td>
+                        </tr>`;
+                    });
+                });
+        }
+
+        // --- Lógica de Modificación Intacta ---
         function fetchIdealPortfolio() {
             fetch('/getPortfolio')
                 .then(res => res.json())
@@ -211,33 +245,19 @@
             .then(result => {
                 statusMessage.style.color = result.ok ? '#2f855a' : '#c53030';
                 statusMessage.innerText = result.text;
-                if (result.ok) { tickerInput.value = ''; percentageInput.value = ''; }
-                fetchIdealPortfolio();
+                if (result.ok) { tickerInput.value = ''; percentageInput.value = ''; fetchIdealPortfolio(); }
                 setTimeout(() => statusMessage.innerText = '', 3000);
             });
         }
 
-        // --- Lógica Original de Actual Portfolio ---
-        function fetchActualPortfolio() {
-            fetch('/getActualPortfolio')
-                .then(res => res.json())
-                .then(data => {
-                    const tableBody = document.getElementById('actual-table-body');
-                    tableBody.innerHTML = data.length === 0 ? '<tr><td colspan="2" style="text-align:center; color:#a0aec0;">No balances recorded.</td></tr>' : '';
-                    data.forEach(asset => {
-                        tableBody.innerHTML += `<tr><td><strong>${asset.ticker}</strong></td><td>€${parseFloat(asset.money).toFixed(2)}</td></tr>`;
-                    });
-                });
-        }
-
         function commitActualAsset() {
             const tickerInput = document.getElementById('actual-ticker');
-            const moneyInput = document.getElementById('actual-money');
+            const unitsInput = document.getElementById('actual-units');
             const statusMessage = document.getElementById('actual-status');
             const ticker = tickerInput.value.trim().toUpperCase();
-            const money = moneyInput.value;
+            const units = unitsInput.value;
 
-            if (!ticker || !money) { 
+            if (!ticker || !units) { 
                 statusMessage.style.color = '#c53030'; 
                 statusMessage.innerText = 'Fields cannot be empty.'; 
                 return; 
@@ -246,14 +266,13 @@
             fetch('/changeActualAsset', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ 'ticker': ticker, 'money': money })
+                body: new URLSearchParams({ 'ticker': ticker, 'units': units })
             })
             .then(res => res.text().then(text => ({ ok: res.ok, text: text })))
             .then(result => {
                 statusMessage.style.color = result.ok ? '#2f855a' : '#c53030';
                 statusMessage.innerText = result.text;
-                if (result.ok) { tickerInput.value = ''; moneyInput.value = ''; }
-                fetchActualPortfolio();
+                if (result.ok) { tickerInput.value = ''; unitsInput.value = ''; fetchActualPortfolio(); }
                 setTimeout(() => statusMessage.innerText = '', 3000);
             });
         }
