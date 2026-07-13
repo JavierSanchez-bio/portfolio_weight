@@ -8,7 +8,7 @@
     "Europa TR": { "isin": "LU0908500753", "category": "Europa" },
     "SAN": { "isin": "ES0113900J37", "category": "Acciones" },
     "Asia TR": { "isin": "IE00B5L8K969", "category": "Asia" },
-    "Ibex": { "FR0010655746": "Europa" },
+    "Ibex": { "isin": "FR0010655746", "category": "Europa" },
     "All World": { "isin": "IE00BK5BQT80", "category": "Global" },
     "MSCI World": { "isin": "IE00B4L5Y983", "category": "Global" },
     "USA": { "isin": "IE000N4ZYX28", "category": "USA" },

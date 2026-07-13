@@ -5,10 +5,12 @@
   
   Comandos para correr la app:
   
-  ./mvnw clean
-  
-  ./mvnw spring-boot:run
+  ./server
   
   
   Gestionar Database:
-  http://localhost:8080/h2-console
+  http://0.0.0.0:8080
+
+
+  COMPILE:
+  g++ server.cpp PortfolioStorage.cpp MarketData.cpp -pthread -lssl -lcrypto -o server
